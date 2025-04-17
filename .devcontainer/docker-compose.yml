@@ -1,0 +1,11 @@
+services:
+  book_api:
+    container_name: "book_api_devcontainer"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /workspaces/book_api
+    entrypoint: /bin/sh -c 'tail --follow /dev/null'
+    volumes:
+      - ..:/workspaces/book_api
+      - /var/run/docker.sock:/var/run/docker.sock
