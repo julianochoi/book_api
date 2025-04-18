@@ -38,10 +38,14 @@ def get_password_hash(password: str) -> str:
 	).decode("utf-8")
 
 
-def create_access_token(subject: str) -> str:
+def create_access_token(subject: str, expires_in_minutes: int | None = None) -> str:
 	settings = config.get_app_settings()
 	now = datetime.now(timezone.utc)
-	expire = now + timedelta(minutes=settings.jwt_expire_minutes)
+
+	if expires_in_minutes is not None:
+		expire = now + timedelta(minutes=expires_in_minutes)
+	else:
+		expire = now + timedelta(minutes=settings.jwt_expire_minutes)
 	to_encode = {
 		"sub": subject,
 		"iat": now,
