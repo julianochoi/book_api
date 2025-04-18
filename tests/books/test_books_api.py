@@ -1,7 +1,10 @@
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.security import create_access_token
 from tests import mocks
 
 
@@ -187,3 +190,16 @@ async def test_invalid_jwt(client: AsyncClient) -> None:
 
 
 # TODO add jwt expiration test
+async def test_jwt_expiration(
+	client: AsyncClient,
+	get_valid_user_jwt: str,
+) -> None:
+	# Create a token with a short expiration time
+	expired_token = create_access_token(subject="testuser", expires_in_minutes=0)
+	headers = {"Authorization": f"Bearer {expired_token}"}
+
+	await asyncio.sleep(1)  # Wait for the token to expire
+	r = await client.get("/books", headers=headers)
+
+	assert r.status_code == 401
+	assert r.json() == {"detail": "Could not validate credentials"}

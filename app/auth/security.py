@@ -1,17 +1,13 @@
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Any
+from typing import Any
 
 import bcrypt
 import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jwt.exceptions import InvalidTokenError
+from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import crud, exceptions
-from app.auth.schemas import User
+from app.auth import crud
 from app.core import config
-from app.db.connection import get_db
 
 ALGORITHM = "HS256"
 bearer_scheme = HTTPBearer(
@@ -66,30 +62,3 @@ def decode_access_token(token: str) -> Any:
 		key=settings.jwt_secret.get_secret_value(),
 		algorithms=[ALGORITHM],
 	)
-
-
-async def get_current_user(
-	session: Annotated[AsyncSession, Depends(get_db)],
-	credentials: Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)],
-) -> User:
-	"""Get current user from JWT token."""
-	credentials_exception = HTTPException(
-		status_code=status.HTTP_401_UNAUTHORIZED,
-		detail="Could not validate credentials",
-		headers={"WWW-Authenticate": "Bearer"},
-	)
-
-	access_token = credentials.credentials
-	if not access_token:
-		raise credentials_exception
-
-	try:
-		payload = decode_access_token(access_token)
-		username = payload.get("sub")
-	except InvalidTokenError:
-		raise credentials_exception
-	try:
-		user = await crud.get_user(session, username=username)
-	except exceptions.UserNotFoundError:
-		raise credentials_exception
-	return user

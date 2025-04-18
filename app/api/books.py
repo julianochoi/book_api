@@ -1,9 +1,13 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 
-from app.api.dependencies import SessionDep
+from app.api.dependencies import SessionDep, get_current_user
 from app.books import crud, exceptions, models
 
-router = APIRouter(prefix="/books", tags=["books"])
+router = APIRouter(
+	prefix="/books",
+	tags=["books"],
+	dependencies=[Depends(get_current_user)],
+)
 
 # TODO add better docs for each endpoint
 

@@ -20,9 +20,6 @@ async def create_user(
 	except IntegrityError:
 		await db.rollback()
 		raise exceptions.UserAlreadyExistsError(username)
-	except Exception as e:
-		await db.rollback()
-		raise exceptions.UserError(f"An error occurred while creating the user: {str(e)}")
 
 
 async def get_user(db: AsyncSession, username: str) -> User:
