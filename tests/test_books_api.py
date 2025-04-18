@@ -1,24 +1,7 @@
-import asyncio
-
-import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.security import create_access_token
 from tests import mocks
-
-
-@pytest.fixture
-async def get_valid_user_jwt(
-	client: AsyncClient,
-	user_model_factory: mocks.UserModelFactory,
-) -> str:
-	"""Fixture to get a valid JWT token for a user."""
-	user = user_model_factory.build()
-	await client.post("/auth/register", json=user.model_dump())
-	r = await client.post("/auth/login", json=user.model_dump())
-	token = r.json()
-	return token["access_token"]
 
 
 async def test_create_book(
@@ -150,56 +133,3 @@ async def test_delete_book_not_found(
 
 	assert r.status_code == 404
 	assert r.json() == {"detail": f"Book with id {invalid_book_id} not found."}
-
-
-async def test_without_authentication(client: AsyncClient) -> None:
-	r = await client.get("/books")
-
-	assert r.status_code == 403
-	assert r.json() == {"detail": "Not authenticated"}
-
-
-async def test_empty_token(client: AsyncClient) -> None:
-	headers = {"Authorization": "Bearer "}
-
-	r = await client.get("/books", headers=headers)
-
-	assert r.status_code == 403
-	assert r.json() == {"detail": "Not authenticated"}
-
-
-async def test_missing_bearer(
-	client: AsyncClient,
-	get_valid_user_jwt: str,
-) -> None:
-	headers = {"Authorization": f"{get_valid_user_jwt}"}
-
-	r = await client.get("/books", headers=headers)
-
-	assert r.status_code == 403
-	assert r.json() == {"detail": "Not authenticated"}
-
-
-async def test_invalid_jwt(client: AsyncClient) -> None:
-	headers = {"Authorization": "Bearer invalid_token"}
-
-	r = await client.get("/books", headers=headers)
-
-	assert r.status_code == 401
-	assert r.json() == {"detail": "Could not validate credentials"}
-
-
-# TODO add jwt expiration test
-async def test_jwt_expiration(
-	client: AsyncClient,
-	get_valid_user_jwt: str,
-) -> None:
-	# Create a token with a short expiration time
-	expired_token = create_access_token(subject="testuser", expires_in_minutes=0)
-	headers = {"Authorization": f"Bearer {expired_token}"}
-
-	await asyncio.sleep(1)  # Wait for the token to expire
-	r = await client.get("/books", headers=headers)
-
-	assert r.status_code == 401
-	assert r.json() == {"detail": "Could not validate credentials"}

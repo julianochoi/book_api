@@ -67,3 +67,16 @@ async def setup_db(test_settings: AppSettings) -> None:
 async def db(setup_db) -> AsyncGenerator[AsyncSession, None]:
 	async for session in get_db():
 		yield session
+
+
+@pytest.fixture
+async def get_valid_user_jwt(
+	client: AsyncClient,
+	user_model_factory: mocks.UserModelFactory,
+) -> str:
+	"""Fixture to get a valid JWT token for a user."""
+	user = user_model_factory.build()
+	await client.post("/auth/register", json=user.model_dump())
+	r = await client.post("/auth/login", json=user.model_dump())
+	token = r.json()
+	return token["access_token"]
