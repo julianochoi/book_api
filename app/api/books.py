@@ -13,11 +13,8 @@ async def create_book(
 	session: SessionDep,
 	input_book: models.CreateBookModel,
 ) -> models.BookResponseModel:
-	try:
-		book = await crud.create_book(session, input_book)
-		return models.BookResponseModel.model_validate(book)
-	except Exception as e:
-		raise HTTPException(status_code=500, detail=f"Failed to create book: {str(e)}")
+	book = await crud.create_book(session, input_book)
+	return models.BookResponseModel.model_validate(book)
 
 
 @router.get("")
@@ -32,14 +29,8 @@ async def get_books(
 	- `skip` is the number of records to skip
 	- `limit` is the maximum number of records to return
 	"""
-	try:
-		books = await crud.get_books(session, skip=skip, limit=limit)
-		return [models.BookResponseModel.model_validate(book) for book in books]
-	except Exception as e:
-		raise HTTPException(
-			status_code=500,
-			detail=f"Failed to retrieve books: {str(e)}",
-		)
+	books = await crud.get_books(session, skip=skip, limit=limit)
+	return [models.BookResponseModel.model_validate(book) for book in books]
 
 
 @router.get("/{book_id}")
@@ -53,11 +44,6 @@ async def get_book(
 		return models.BookResponseModel.model_validate(book)
 	except exceptions.BookNotFoundError as e:
 		raise HTTPException(status_code=404, detail=str(e))
-	except Exception as e:
-		raise HTTPException(
-			status_code=500,
-			detail=f"Failed to retrieve book id={book_id}: {str(e)}",
-		)
 
 
 @router.patch("/{book_id}")
@@ -68,15 +54,10 @@ async def update_book(
 ) -> models.BookResponseModel:
 	"""Partially update a book by id."""
 	try:
-		book = crud.update_book(session, book_id, book_patch)
+		book = await crud.update_book(session, book_id, book_patch)
 		return models.BookResponseModel.model_validate(book)
 	except exceptions.BookNotFoundError as e:
 		raise HTTPException(status_code=404, detail=str(e))
-	except Exception as e:
-		raise HTTPException(
-			status_code=500,
-			detail=f"Failed to update book id={book_id}: {str(e)}",
-		)
 
 
 @router.delete(
@@ -89,13 +70,6 @@ async def delete_book(
 ) -> None:
 	try:
 		book = await crud.get_book(session, book_id)
+		await crud.delete_book(session, book)
 	except exceptions.BookNotFoundError as e:
 		raise HTTPException(status_code=404, detail=str(e))
-
-	try:
-		await crud.delete_book(session, book)
-	except Exception as e:
-		raise HTTPException(
-			status_code=500,
-			detail=f"Failed to delete book id={book_id}: {str(e)}",
-		)

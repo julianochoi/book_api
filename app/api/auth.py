@@ -36,15 +36,15 @@ async def login(session: SessionDep, form_data: UserModel) -> Token:
 	"""Login user and return JWT token."""
 	try:
 		user_valid = await security.authenticate_user(session, form_data.username, form_data.password)
+		if not user_valid:
+			raise HTTPException(
+				status_code=status.HTTP_401_UNAUTHORIZED,
+				detail="Incorrect username or password",
+			)
+		access_token = security.create_access_token(subject=form_data.username)
+		return Token(access_token=access_token, token_type="bearer")
 	except exceptions.UserNotFoundError as e:
-		raise HTTPException(status_code=e.status_code, detail=e.detail)
-	if not user_valid:
-		raise HTTPException(
-			status_code=status.HTTP_401_UNAUTHORIZED,
-			detail="Incorrect username or password",
-		)
-	access_token = security.create_access_token(subject=form_data.username)
-	return Token(access_token=access_token, token_type="bearer")
+		raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.post(
@@ -77,9 +77,7 @@ async def register(session: SessionDep, new_user: UserModel) -> None:
 			password_hash=security.get_password_hash(new_user.password),
 		)
 	except exceptions.UserAlreadyExistsError as e:
-		raise HTTPException(status_code=e.status_code, detail=e.detail)
-	except Exception as e:
 		raise HTTPException(
-			status_code=500,
-			detail=f"Failed to register new user: {str(e)}",
+			status_code=status.HTTP_409_CONFLICT,
+			detail=str(e),
 		)

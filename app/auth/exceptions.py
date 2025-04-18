@@ -1,4 +1,3 @@
-from fastapi import status
 from pydantic import BaseModel
 
 
@@ -18,8 +17,6 @@ class UserNotFoundError(UserError):
 	def __init__(self, username: str):
 		super().__init__(f"User '{username}' not found.")
 		self.username = username
-		self.status_code = status.HTTP_404_NOT_FOUND
-		self.detail = f"User '{username}' not found."
 
 
 class UserAlreadyExistsError(UserError):
@@ -28,5 +25,3 @@ class UserAlreadyExistsError(UserError):
 	def __init__(self, username: str):
 		super().__init__(f"User '{username}' already exists.")
 		self.username = username
-		self.status_code = status.HTTP_409_CONFLICT
-		self.detail = f"User '{username}' already exists."

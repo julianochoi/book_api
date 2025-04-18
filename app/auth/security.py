@@ -8,7 +8,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jwt.exceptions import InvalidTokenError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth import crud
+from app.auth import crud, exceptions
 from app.auth.schemas import User
 from app.core import config
 from app.db.connection import get_db
@@ -19,6 +19,7 @@ bearer_scheme = HTTPBearer(
 	description="Authentication scheme for JWT tokens.\n\n"
 	"Use the token obtained from the `/auth/login` endpoint to access protected resources.",
 	scheme_name="Bearer JWT",
+	auto_error=True,
 )
 
 
@@ -81,11 +82,10 @@ async def get_current_user(
 	try:
 		payload = decode_access_token(access_token)
 		username = payload.get("sub")
-		if username is None:
-			raise credentials_exception
 	except InvalidTokenError:
 		raise credentials_exception
-	user = await crud.get_user(session, username=username)
-	if user is None:
+	try:
+		user = await crud.get_user(session, username=username)
+	except exceptions.UserNotFoundError:
 		raise credentials_exception
 	return user
