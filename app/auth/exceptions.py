@@ -1,10 +1,3 @@
-from pydantic import BaseModel
-
-
-class ExceptionModel(BaseModel):
-	detail: str
-
-
 class UserError(Exception):
 	"""Base class for user-related exceptions."""
 

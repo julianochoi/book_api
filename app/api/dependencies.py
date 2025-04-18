@@ -3,6 +3,7 @@ from typing import Annotated
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from jwt.exceptions import InvalidTokenError
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import crud, exceptions
@@ -39,3 +40,7 @@ async def get_current_user(
 
 
 UserDep = Annotated[User, Depends(get_current_user)]
+
+
+class ExceptionModel(BaseModel):
+	detail: str

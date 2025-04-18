@@ -14,7 +14,7 @@ async def test_create_book(
 
 	r = await client.post("/books", json=book_data.model_dump(mode="json"), headers=headers)
 
-	assert r.status_code == 200
+	assert r.status_code == 201
 	assert r.json() is not None
 	assert r.json()["title"] == book_data.title
 	assert r.json()["author"] == book_data.author

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 
-from app.api.dependencies import SessionDep
+from app.api import dependencies
 from app.auth import crud, exceptions, security
 from app.auth.models import Token, UserModel
 
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 	responses={
 		401: {
 			"description": "Additional Response - Incorrect username or password",
-			"model": exceptions.ExceptionModel,
+			"model": dependencies.ExceptionModel,
 			"content": {
 				"application/json": {
 					"example": {"detail": "Incorrect username or password"},
@@ -23,7 +23,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 		},
 		404: {
 			"description": "Additional Response - User not found",
-			"model": exceptions.ExceptionModel,
+			"model": dependencies.ExceptionModel,
 			"content": {
 				"application/json": {
 					"example": {"detail": "User 'username' not found."},
@@ -32,7 +32,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 		},
 	},
 )
-async def login(session: SessionDep, form_data: UserModel) -> Token:
+async def login(session: dependencies.SessionDep, form_data: UserModel) -> Token:
 	"""Login user and return JWT token."""
 	try:
 		user_valid = await security.authenticate_user(session, form_data.username, form_data.password)
@@ -54,7 +54,7 @@ async def login(session: SessionDep, form_data: UserModel) -> Token:
 	responses={
 		status.HTTP_409_CONFLICT: {
 			"description": "Additional Response - User already exists",
-			"model": exceptions.ExceptionModel,
+			"model": dependencies.ExceptionModel,
 			"content": {
 				"application/json": {
 					"example": {"detail": "User 'username' already exists."},
@@ -63,7 +63,7 @@ async def login(session: SessionDep, form_data: UserModel) -> Token:
 		},
 	},
 )
-async def register(session: SessionDep, new_user: UserModel) -> None:
+async def register(session: dependencies.SessionDep, new_user: UserModel) -> None:
 	"""Register a new user.
 
 	Parameters:
