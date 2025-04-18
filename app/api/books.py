@@ -1,23 +1,23 @@
 from fastapi import APIRouter, HTTPException
 
 from app.api.dependencies import SessionDep
-from app.books import crud, models
+from app.books import crud, exceptions, models
 
 router = APIRouter(prefix="/books", tags=["books"])
+
+# TODO add better docs for each endpoint
 
 
 @router.post("")
 async def create_book(
 	session: SessionDep,
-	book: models.CreateBookModel,
+	input_book: models.CreateBookModel,
 ) -> models.BookResponseModel:
 	try:
-		return crud.create_book(session, book)  # type: ignore # NOTE mypy doesn't recognize the return type
+		book = await crud.create_book(session, input_book)
+		return models.BookResponseModel.model_validate(book)
 	except Exception as e:
-		raise HTTPException(
-			status_code=500,
-			detail=f"Failed to create book: {str(e)}",
-		)
+		raise HTTPException(status_code=500, detail=f"Failed to create book: {str(e)}")
 
 
 @router.get("")
@@ -26,9 +26,15 @@ async def get_books(
 	skip: int = 0,
 	limit: int = 100,
 ) -> list[models.BookResponseModel]:
-	"""Get all books with pagination."""
+	"""Get all books with pagination, ordered by id.
+
+	NOTE: Uses **offset** pagination:
+	- `skip` is the number of records to skip
+	- `limit` is the maximum number of records to return
+	"""
 	try:
-		return crud.get_books(session, skip=skip, limit=limit)  # type: ignore
+		books = await crud.get_books(session, skip=skip, limit=limit)
+		return [models.BookResponseModel.model_validate(book) for book in books]
 	except Exception as e:
 		raise HTTPException(
 			status_code=500,
@@ -41,13 +47,12 @@ async def get_book(
 	session: SessionDep,
 	book_id: int,
 ) -> models.BookResponseModel:
+	"""Get book by id."""
 	try:
-		book = crud.get_book(session, book_id)
-		if not book:
-			raise HTTPException(status_code=404, detail=f"Book id={book_id} not found")
-		return book  # type: ignore
-	except HTTPException as e:
-		raise e
+		book = await crud.get_book(session, book_id)
+		return models.BookResponseModel.model_validate(book)
+	except exceptions.BookNotFoundError as e:
+		raise HTTPException(status_code=404, detail=str(e))
 	except Exception as e:
 		raise HTTPException(
 			status_code=500,
@@ -61,13 +66,12 @@ async def update_book(
 	book_id: int,
 	book_patch: models.UpdateBookModel,
 ) -> models.BookResponseModel:
+	"""Partially update a book by id."""
 	try:
 		book = crud.update_book(session, book_id, book_patch)
-		if not book:
-			raise HTTPException(status_code=404, detail=f"Book id={book_id} not found")
-		return book  # type: ignore
-	except HTTPException as e:
-		raise e
+		return models.BookResponseModel.model_validate(book)
+	except exceptions.BookNotFoundError as e:
+		raise HTTPException(status_code=404, detail=str(e))
 	except Exception as e:
 		raise HTTPException(
 			status_code=500,
@@ -84,12 +88,12 @@ async def delete_book(
 	session: SessionDep,
 ) -> None:
 	try:
-		book = crud.get_book(session, book_id)
-		if not book:
-			raise HTTPException(status_code=404, detail=f"Book id={book_id} not found")
-		crud.delete_book(session, book)
-	except HTTPException as e:
-		raise e
+		book = await crud.get_book(session, book_id)
+	except exceptions.BookNotFoundError as e:
+		raise HTTPException(status_code=404, detail=str(e))
+
+	try:
+		await crud.delete_book(session, book)
 	except Exception as e:
 		raise HTTPException(
 			status_code=500,

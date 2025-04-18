@@ -1,7 +1,7 @@
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import DeclarativeBase
 
 from app.core.config import AppSettings
 
@@ -10,17 +10,20 @@ class Base(DeclarativeBase):
 	pass
 
 
-# TODO veriyfy if async version is needed
-def create_db(app_settings: AppSettings) -> None:
-	engine = create_engine(app_settings.db_conn_url)
+async def create_db(app_settings: AppSettings) -> None:
 	global SessionLocal
-	SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)  # type: ignore
-	Base.metadata.create_all(bind=engine)
+	engine = create_async_engine(app_settings.database_url)
+	SessionLocal = async_sessionmaker(  # type: ignore[name-defined]
+		bind=engine,
+		class_=AsyncSession,
+		expire_on_commit=False,
+		autoflush=False,
+		autocommit=False,
+	)
+	async with engine.begin() as conn:
+		await conn.run_sync(Base.metadata.create_all)
 
 
-def get_db() -> Generator[Session, None, None]:
-	db = SessionLocal()  # type: ignore
-	try:
-		yield db
-	finally:
-		db.close()
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+	async with SessionLocal() as session:  # type: ignore[name-defined]
+		yield session

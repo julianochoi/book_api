@@ -6,11 +6,13 @@ authors = [
     {name = "Juliano Choi",email = "julianochoi@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.13,<4.0"
 dependencies = [
     "fastapi[standard] (>=0.115.12,<0.116.0)",
     "pydantic-settings (>=2.8.1,<3.0.0)",
-    "sqlalchemy (>=2.0.40,<3.0.0)",
+    "sqlalchemy[aiosqlite] (>=2.0.40,<3.0.0)",
+    "pyjwt (>=2.10.1,<3.0.0)",
+    "passlib[bcrypt] (>=1.7.4,<2.0.0)",
 ]
 
 [tool.poetry]

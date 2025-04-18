@@ -17,7 +17,7 @@ class BooksAPI(FastAPI):
 @asynccontextmanager
 async def lifespan(app: BooksAPI) -> AsyncGenerator[None, None]:
 	# startup
-	create_db(app.settings)
+	await create_db(app.settings)
 	yield
 	# shutdown
 
