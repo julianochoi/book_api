@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class AppSettings(BaseSettings):
 	environment: str = "dev"
+	port: int = 8000
 	database_url: str = "sqlite+aiosqlite:///./books.db"
 	redis_url: str = Field("redis://redis:6379", alias="rediscloud_url")
 

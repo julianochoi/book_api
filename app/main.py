@@ -51,6 +51,7 @@ def main() -> None:
 		app="app.main:create_app",
 		factory=True,
 		host="0.0.0.0",
+		port=settings.port,
 		access_log=in_dev_env,
 		reload=in_dev_env,
 		reload_dirs="app",
