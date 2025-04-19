@@ -1,5 +1,5 @@
 services:
-  book_api:
+  app:
     container_name: "book_api"
     build:
       context: .
