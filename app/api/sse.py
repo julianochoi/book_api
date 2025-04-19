@@ -11,7 +11,6 @@ from app.api import dependencies
 router = APIRouter(
 	prefix="/sse",
 	tags=["sse"],
-	# dependencies=[Depends(get_current_user)], # TODO enable auth
 )
 
 # TODO move to app settings later
@@ -45,13 +44,19 @@ async def event_generator(
 		await redis.close()
 
 
-@router.get("/updates/{channel}")
+@router.get(
+	"/updates/{channel}",
+	status_code=200,
+	summary="Get update stream from channel",
+)
 async def sse_updates(
 	redis: dependencies.RedisDep,
 	channel: str,
 	request: Request,
 ) -> EventSourceResponse:
-	"""SSE endpoint for real-time updates."""
+	"""This endpoint provides a server-sent events (SSE) stream of real-time updates from a specified Redis channel.
+	
+	Clients can subscribe to this stream to receive updates as they occur."""
 	return EventSourceResponse(
 		content=event_generator(redis, channel, request),
 		send_timeout=30,  # seconds

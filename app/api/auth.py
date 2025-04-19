@@ -10,7 +10,7 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 @router.post(
 	"/login",
 	status_code=200,
-	summary="Login user",
+	summary="Login user and receive JWT token",
 	responses={
 		401: {
 			"description": "Additional Response - Incorrect username or password",
@@ -33,7 +33,18 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 	},
 )
 async def login(session: dependencies.SessionDep, form_data: UserModel) -> Token:
-	"""Login user and return JWT token."""
+	"""This endpoint is used to authenticate a user and return a JWT token.
+
+	The token is used to access protected endpoints as an `Authorization` Bearer token.
+
+	Example of a request header with the token:
+	```
+	GET /books HTTP/1.1
+	Host: localhost:8000
+	Authorization: Bearer <token>
+	...
+	```
+	"""
 	try:
 		user_valid = await security.authenticate_user(session, form_data.username, form_data.password)
 		if not user_valid:

@@ -11,7 +11,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
 
   redis:
-    image: redis:latest
+    image: redis:7.4-alpine
     container_name: "redis_devcontainer"
     ports:
       - "6379:6379"
