@@ -7,13 +7,9 @@ services:
     image: book_api:latest
     ports:
       - "8000:8000"
-    volumes:
-      - ./books.db:/book_api/books.db
     env_file:
       - .env
     restart: unless-stopped
-    depends_on:
-      - redis
 
   redis:
     container_name: "book_api_redis"

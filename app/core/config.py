@@ -1,13 +1,13 @@
 from functools import lru_cache
 
-from pydantic import SecretStr
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class AppSettings(BaseSettings):
 	environment: str = "dev"
 	database_url: str = "sqlite+aiosqlite:///./books.db"
-	redis_url: str = "redis://redis:6379"
+	redis_url: str = Field("redis://redis:6379", alias="rediscloud_url")
 
 	# JWT
 	jwt_secret: SecretStr
