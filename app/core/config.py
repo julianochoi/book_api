@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class AppSettings(BaseSettings):
 	environment: str = "dev"
 	database_url: str = "sqlite+aiosqlite:///./books.db"
+	redis_url: str = "redis://redis:6379"
 
 	# JWT
 	jwt_secret: SecretStr

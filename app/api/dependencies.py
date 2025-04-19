@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import redis.asyncio as aioredis
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials
 from jwt.exceptions import InvalidTokenError
@@ -10,9 +11,11 @@ from app.auth import crud, exceptions
 from app.auth.schemas import User
 from app.auth.security import bearer_scheme, decode_access_token
 from app.db.connection import get_db
+from app.db.redis import get_redis
 
 SessionDep = Annotated[AsyncSession, Depends(get_db)]
 JWTBearerDep = Annotated[HTTPAuthorizationCredentials, Depends(bearer_scheme)]
+RedisDep = Annotated[aioredis.Redis, Depends(get_redis)]
 
 
 async def get_current_user(
